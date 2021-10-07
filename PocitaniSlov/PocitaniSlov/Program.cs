@@ -54,8 +54,7 @@ namespace PocitaniSlov
             string[] words;
             foreach (string line in lines)
             {
-                line.Replace('\n', ' ');
-                line.Replace('\t', ' ');
+                
                 words = line.Split(" ");
 
                 foreach (string word in words)
