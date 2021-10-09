@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace PocitaniSlov
@@ -8,30 +9,36 @@ namespace PocitaniSlov
     {
         static void Main(string[] args)
         {
-            Reader reader = new Reader();
             Counter counter = new Counter();
-            string[] lines;
+            FileReader reader = new FileReader();
             if (args.Length != 1)
             {
                 Console.WriteLine("Argument Error");
             }
             else
             {
-                lines = reader.GetInput(args[0]);
-                counter.CountWords(lines, counter);
+                reader.CheckFile(args[0]);
+                counter.CountWords(args[0]);
                 Console.WriteLine(counter.GetOutput());
             }
-
         }
-
     }
 
-    class Reader
+    class FileReader
     {
-        public string[] GetInput(string fileName)
+
+        public void CheckFile(string name)
         {
-            string[] lines = File.ReadAllLines(fileName);
-            return lines;
+            try
+            {
+                File.Exists(name);
+                File.OpenRead(name);
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("File Error");
+                System.Environment.Exit(0);
+            }
         }
 
     }
@@ -39,6 +46,7 @@ namespace PocitaniSlov
     class Counter
     {
         private int wordCount;
+
         public int GetOutput()
         {
             return wordCount;
@@ -48,20 +56,39 @@ namespace PocitaniSlov
         {
             wordCount += 1;
         }
-
-        public void CountWords(string[] lines, Counter counter)
+        
+        public void CountWords(string fileName)
         {
-            string[] words;
-            foreach (string line in lines)
-            {
-                
-                words = line.Split(" ");
+            StreamReader reader = new StreamReader(fileName);
 
-                foreach (string word in words)
+            while (!reader.EndOfStream)
+            {
+                int index = 0;
+                string line = reader.ReadLine();
+
+                while (index < line.Length && char.IsWhiteSpace(line[index]))
                 {
-                    counter.IncrementCounter();
+                    ++index;
                 }
 
+
+                while (index < line.Length)
+                {
+                    
+                    while (index < line.Length && !char.IsWhiteSpace(line[index]))
+                    {
+                        ++index;
+                    }
+
+                    IncrementCounter();
+
+                    while (index < line.Length && char.IsWhiteSpace(line[index]))
+                    {
+                        ++index;
+                    }
+
+                    
+                }
             }
         }
     }
