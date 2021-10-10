@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace PocitaniSlov
 {
@@ -11,6 +11,7 @@ namespace PocitaniSlov
         {
             Counter counter = new Counter();
             FileReader reader = new FileReader();
+
             if (args.Length != 1)
             {
                 Console.WriteLine("Argument Error");
@@ -19,7 +20,7 @@ namespace PocitaniSlov
             {
                 reader.GetFile(args[0]);
                 counter.CountWords(reader.GetInput());
-                Console.WriteLine(counter.GetOutput());
+                counter.GetOutput();
             }
         }
     }
@@ -27,6 +28,10 @@ namespace PocitaniSlov
     class FileReader
     {
         private StreamReader reader;
+        /// <summary>
+        /// Function for checking if a file exists. Also tries to open the file using StreamReader.
+        /// </summary>
+        /// <param name="name"></param>
         public void GetFile(string name)
         {
             try
@@ -50,49 +55,43 @@ namespace PocitaniSlov
 
     class Counter
     {
-        private int wordCount;
-
-        public int GetOutput()
-        {
-            return wordCount;
-        }
-
-        public void IncrementCounter()
-        {
-            wordCount += 1;
-        }
+        Dictionary<string, int> result = new Dictionary<string, int>();
         
+        /// <summary>
+        /// Function designed to output a dictionary. Dictionary is ordered by the keys. 
+        /// </summary>
+        public void GetOutput()
+        {
+            foreach (var item in result.OrderBy(x => x.Key))
+            {
+                if(item.Key != "")
+                    Console.WriteLine(item.Key + ": " + item.Value);
+            }
+        }
+        /// <summary>
+        /// Function for counting the frequency of words in a file. Results are stored in a dictionary. 
+        /// </summary>
+        /// <param name="reader"></param>
         public void CountWords(StreamReader reader)
         {
-            
-
             while (!reader.EndOfStream)
             {
-                int index = 0;
                 string line = reader.ReadLine();
+                string[] words = line.Split(null);
 
-                while (index < line.Length && char.IsWhiteSpace(line[index]))
+                foreach (var word in words)
                 {
-                    ++index;
+                    if (!result.ContainsKey(word))
+                    {
+                        result.Add(word, 0);
+                    }
                 }
-
-
-                while (index < line.Length)
+                foreach (var word in words)
                 {
                     
-                    while (index < line.Length && !char.IsWhiteSpace(line[index]))
-                    {
-                        ++index;
-                    }
-
-                    IncrementCounter();
-
-                    while (index < line.Length && char.IsWhiteSpace(line[index]))
-                    {
-                        ++index;
-                    }
-
+                    result[word] += 1;
                     
+
                 }
             }
         }
