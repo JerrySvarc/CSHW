@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlokText", "BlokText\BlokText.csproj", "{C104312F-6441-4ACD-9B6A-41738E681A24}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C104312F-6441-4ACD-9B6A-41738E681A24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C104312F-6441-4ACD-9B6A-41738E681A24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C104312F-6441-4ACD-9B6A-41738E681A24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C104312F-6441-4ACD-9B6A-41738E681A24}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0A383359-8A19-4590-A4C3-149CA1CA2C7B}
+	EndGlobalSection
+EndGlobal
