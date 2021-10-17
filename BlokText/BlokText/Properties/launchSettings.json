@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BlokText": {
+      "commandName": "Project",
+      "commandLineArgs": "plain.txt result.txt 7"
+    }
+  }
+}
