@@ -100,18 +100,16 @@ namespace BlokText
             bool endOfLine = false;
             List<StringBuilder> buffer = new List<StringBuilder>();
             int currLenght = 0;
-            char character = '1';
-            
-            while ((int)character > 0)
+            char character;
+            while (!inputFile.reader.EndOfStream)
             {
                 character = inputFile.ReadChar();
                 if (character == ' ' || character == '\t' || endOfLine)
                 {
-                    if ((builder.Length + 1) + currLenght < maxLength)
+                    if ((builder.Length + 1) + currLenght <= maxLength)
                     {
                         currLenght += builder.Length+1;
                         buffer.Add(builder);
-                        Console.WriteLine(builder);
                         builder = new StringBuilder();
                     }
                     else
@@ -119,7 +117,7 @@ namespace BlokText
                         WriteOutput(buffer, maxLength, name);
                         buffer.Clear();
                         buffer.Add(builder);
-                        currLenght = builder.Length;
+                        currLenght = builder.Length+1;
                         builder = new StringBuilder();
                     }
                 }
@@ -132,6 +130,12 @@ namespace BlokText
                     builder.Append(character);
                 }
             }
+            WriteOutput(buffer, maxLength, name);
+            buffer.Clear();
+            buffer.Add(builder);
+            WriteOutput(buffer, maxLength, name);
+            
+
         }
         public void WriteOutput(List<StringBuilder> buffer, int maxLength, string name)
         {
