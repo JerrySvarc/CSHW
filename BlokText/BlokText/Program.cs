@@ -20,17 +20,44 @@ namespace BlokText
             }
             else
             {
-                reader.GetInput(args[0]);
-                writer.CreateOutputFile(args[1]);
-                writer.FormatFile(reader, maxLength, args[1]);
+                try
+                {
+                    reader.GetInput(args[0]);
+                    writer.CreateOutputFile(args[1]);
+                    writer.FormatFile(reader, maxLength, args[1]);
+                }
+                catch (FileNotFoundException)
+                {
+                    ReportFileError();
+                }
+                catch (IOException)
+                {
+                    ReportFileError();
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    ReportFileError();
+                }
+                catch (System.Security.SecurityException)
+                {
+                    ReportFileError();
+                }
             }
+        }
+        static void ReportFileError()
+        {
+            Console.WriteLine("File Error");
+        }
+
+        static void ReportArgumentError()
+        {
+            Console.WriteLine("Argument Error");
         }
     }
 
     interface IFileReader
     {
-        public StreamReader GetInput(string name);
-        public char ReadChar();
+        public void GetInput(string name);
     }
 
     interface ITextWriter
@@ -41,171 +68,93 @@ namespace BlokText
 
     class FileReader : IFileReader
     {
-        public StreamReader reader;
-        private int characterVal;
-
+        public StreamReader reader = null;
 
         //Loads input file 
-        public StreamReader GetInput(string name)
+        public void GetInput(string name)
         {
-            try
-            {
-                reader = new StreamReader(name);
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("File Error");
-                throw;
-            }
-            return reader;
+            reader = new StreamReader(name);
         }
-        // Reads one character from the input file 
-        public char ReadChar()
-        {
-            try
-            {
-                characterVal = reader.Read();
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("File Error");
-                throw;
-            }
-            return (char)characterVal; ;
-        }
-
 
     }
 
     class TextWriter : ITextWriter
     {
-        
+
         public void CreateOutputFile(string name)
         {
-            try
-            {
-                File.Create(name).Close();
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("File Error");
-                throw;
-            }
-            
+            File.Create(name).Close();
         }
 
         public void FormatFile(FileReader inputFile, int maxLength, string name)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder buffer = new StringBuilder();
+            List<string> line = new List<string>();
             bool endOfLine = false;
-            List<StringBuilder> buffer = new List<StringBuilder>();
+            bool endOfFile = false;
             int currLenght = 0;
-            char character;
-            while (!inputFile.reader.EndOfStream)
+            char character = ' ';
+
+            while (character != -1 && !endOfFile)
             {
-                character = inputFile.ReadChar();
-                if (character == ' ' || character == '\t' || endOfLine)
+                if (character == ' ' || character =='\t' || character == '\n')
                 {
-                    if ((builder.Length + 1) + currLenght <= maxLength)
+                    if (buffer.Length >= maxLength)
                     {
-                        currLenght += builder.Length+1;
-                        buffer.Add(builder);
-                        builder = new StringBuilder();
+                        WriteOutput(line, maxLength, name);
+                        line.Clear();
+                        line.Add(buffer.ToString());
+                        buffer.Clear();
+                        WriteOutput(line, maxLength, name);
+                        line.Clear();
+                        currLenght = 0;
+                    }
+                    else if (buffer.Length + currLenght <= maxLength)
+                    {
+                        currLenght += buffer.Length + 1;
+                        line.Add(buffer.ToString());
+                        buffer.Clear();
                     }
                     else
                     {
-                        WriteOutput(buffer, maxLength, name);
+                        WriteOutput(line, maxLength, name);
+                        line.Clear();
+                        line.Add(buffer.ToString());
+                        currLenght = buffer.Length + 1;
                         buffer.Clear();
-                        buffer.Add(builder);
-                        currLenght = builder.Length+1;
-                        builder = new StringBuilder();
                     }
                 }
-                else if(character == '\n')
+                else if (character == '\uffff')
                 {
-                    endOfLine = true;
+                    endOfFile = true;
                 }
                 else
                 {
-                    builder.Append(character);
+                    endOfLine = false;
+                    buffer.Append(character);
                 }
-            }
-            WriteOutput(buffer, maxLength, name);
-            buffer.Clear();
-            buffer.Add(builder);
-            WriteOutput(buffer, maxLength, name);
-            
-
-        }
-        public void WriteOutput(List<StringBuilder> buffer, int maxLength, string name)
-        {
-
-            int gapCount = buffer.Count-1;
-            int charCount = 0;
-            int spacesLeft;
-            // count the number of characters across all words + 1 for at least one space after each word
-            foreach (var word in buffer)
-            {
-                charCount += word.Length+1;
-            }
-
-            charCount -= 1; // No space after the last word - number represents a normal line with 1 space between each word
-
-            if (gapCount != 0)
-            {
-                 spacesLeft = (maxLength - charCount);
-            }
-            else
-            {
-                spacesLeft = maxLength - charCount;
-            }
-
-            StringBuilder line = new StringBuilder();
-            if (gapCount != 0 && spacesLeft % gapCount == 0)
-            {
-                int spacesToAdd = spacesLeft / gapCount;
                 
-                foreach (var word in buffer)
-                {
-                    if (buffer.Count == 1)
-                    {
-                        line.Append(word);
-                    }
-                    else
-                    {
-                        line.Append(word).Append(' ', spacesToAdd + 1);
-                    }
-                    
-                }
+                character = (char)inputFile.reader.Read();
             }
-            else if (buffer.Count == 1 && gapCount == 0)
+            line.Clear();
+            line.Add(buffer.ToString());
+            WriteOutput(line, maxLength, name);
+        }
+
+        public void WriteOutput(List<string> line, int maxLength, string name)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (var VARIABLE in line)
             {
-                line.Append(buffer[0]).Append(' ', spacesLeft);
-            }
-            else
-            {
-                int spacesToAdd = (spacesLeft / gapCount) + (spacesLeft%gapCount);
-
-                foreach (var word in buffer)
-                {
-                    if (buffer.Count == 1)
-                    {
-                        line.Append(word);
-                    }
-                    else
-                    {
-                        line.Append(word).Append(' ', spacesToAdd + 1);
-                        --spacesToAdd;
-                    }
-
-                }
+                builder.Append(VARIABLE).Append(" ");
             }
 
+            Console.WriteLine(builder);
             try
             {
-                using (StreamWriter writer = new StreamWriter(name,append:true))
+                using (StreamWriter writer = new StreamWriter(name, append: true))
                 {
-                    writer.WriteLine(line);
+                    
                 }
             }
             catch (IOException)

@@ -2,7 +2,7 @@
   "profiles": {
     "BlokText": {
       "commandName": "Project",
-      "commandLineArgs": " LoremIpsum.txt result.txt 40"
+      "commandLineArgs": "LoremIpsum.txt result.txt 40"
     }
   }
 }
