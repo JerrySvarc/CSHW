@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Security;
 using System.Text;
@@ -48,11 +49,6 @@ namespace BlokText
         {
             Console.WriteLine("File Error");
         }
-
-        static void ReportArgumentError()
-        {
-            Console.WriteLine("Argument Error");
-        }
     }
 
     interface IFileReader
@@ -75,7 +71,6 @@ namespace BlokText
         {
             reader = new StreamReader(name);
         }
-
     }
 
     class TextWriter : ITextWriter
@@ -93,12 +88,24 @@ namespace BlokText
             bool endOfLine = false;
             bool endOfFile = false;
             int currLenght = 0;
-            char character = ' ';
+            
 
-            while (character != -1 && !endOfFile)
+            while (!inputFile.reader.EndOfStream)
             {
-                if (character == ' ' || character =='\t' || character == '\n')
+                char character  = (char)inputFile.reader.Read(); ;
+                while (character != '\uffff' && char.IsWhiteSpace(character))
                 {
+                    character = (char) inputFile.reader.Read();
+                }
+
+                while (character != '\uffff')
+                {
+                    while (character != '\uffff' && !char.IsWhiteSpace(character))
+                    {
+                        buffer.Append(character);
+                        character = (char)inputFile.reader.Read();
+                    }
+
                     if (buffer.Length >= maxLength)
                     {
                         WriteOutput(line, maxLength, name);
@@ -123,37 +130,46 @@ namespace BlokText
                         currLenght = buffer.Length + 1;
                         buffer.Clear();
                     }
+                    
+
+                    while (character != '\uffff' && char.IsWhiteSpace(character))
+                    {
+                        character = (char)inputFile.reader.Read();
+                    }
                 }
-                else if (character == '\uffff')
-                {
-                    endOfFile = true;
-                }
-                else
-                {
-                    endOfLine = false;
-                    buffer.Append(character);
-                }
-                
-                character = (char)inputFile.reader.Read();
             }
-            line.Clear();
-            line.Add(buffer.ToString());
-            WriteOutput(line, maxLength, name);
         }
 
+        public int ManageLine(StringBuilder buffer, List<string> line, int maxLength, string name, int currLenght)
+        {
+           
+
+            return currLenght;
+        }
         public void WriteOutput(List<string> line, int maxLength, string name)
         {
             StringBuilder builder = new StringBuilder();
-            foreach (var VARIABLE in line)
-            {
-                builder.Append(VARIABLE).Append(" ");
-            }
 
-            Console.WriteLine(builder);
+            foreach (var word in line)
+            {
+                if (word == line[line.Count -1])
+                {
+                    builder.Append(word).Append('\n');
+                }
+                else
+                {
+                    builder.Append(word).Append(" ");
+                }
+               
+            }
+            Console.Write(builder);
+            
+
             try
             {
                 using (StreamWriter writer = new StreamWriter(name, append: true))
                 {
+                    
                     
                 }
             }
