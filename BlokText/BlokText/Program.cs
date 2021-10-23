@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Security;
 using System.Text;
 
 namespace BlokText
@@ -29,23 +26,23 @@ namespace BlokText
                 }
                 catch (FileNotFoundException)
                 {
-                    ReportFileError();
+                    WriteFileError();
                 }
                 catch (IOException)
                 {
-                    ReportFileError();
+                    WriteFileError();
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    ReportFileError();
+                    WriteFileError();
                 }
                 catch (System.Security.SecurityException)
                 {
-                    ReportFileError();
+                    WriteFileError();
                 }
             }
         }
-        static void ReportFileError()
+        static void WriteFileError()
         {
             Console.WriteLine("File Error");
         }
@@ -88,24 +85,27 @@ namespace BlokText
             bool endOfLine = false;
             bool endOfFile = false;
             int currLenght = 0;
-            
+            int lastBufferLen = 0;
+            int lastLineLen = 0;
 
             while (!inputFile.reader.EndOfStream)
             {
-                char character  = (char)inputFile.reader.Read(); ;
-                while (character != '\uffff' && char.IsWhiteSpace(character))
+                char character = (char)inputFile.reader.Read(); 
+                //skip all whitespace characters before first word
+                while (character != '\uffff' && (character == '\n' || character == '\t' || character == ' '))
                 {
-                    character = (char) inputFile.reader.Read();
+                    character = (char)inputFile.reader.Read();
                 }
 
                 while (character != '\uffff')
                 {
-                    while (character != '\uffff' && !char.IsWhiteSpace(character))
+                    //read a word and add it to buffer
+                    while (character != '\uffff' && character != '\n' && character != '\t' && character != ' ')
                     {
                         buffer.Append(character);
                         character = (char)inputFile.reader.Read();
                     }
-
+                    //if a word is longer than the max length of line, output current line, add the buffer to a new line and output it
                     if (buffer.Length >= maxLength)
                     {
                         WriteOutput(line, maxLength, name);
@@ -116,12 +116,14 @@ namespace BlokText
                         line.Clear();
                         currLenght = 0;
                     }
+                    //if a character fits on a line, add it 
                     else if (buffer.Length + currLenght <= maxLength)
                     {
                         currLenght += buffer.Length + 1;
                         line.Add(buffer.ToString());
                         buffer.Clear();
                     }
+                    //if the word fits on a line but can't be added to a current line, display current line, then add the word to the next line
                     else
                     {
                         WriteOutput(line, maxLength, name);
@@ -130,54 +132,70 @@ namespace BlokText
                         currLenght = buffer.Length + 1;
                         buffer.Clear();
                     }
-                    
 
-                    while (character != '\uffff' && char.IsWhiteSpace(character))
+                    while (character != '\uffff' && (character == '\n' || character == '\t' || character == ' '))
                     {
+                        //if there was a new line but no characters were read -> end of paragraph
+                        if (character == '\n' && endOfLine && lastLineLen == line.Count && lastBufferLen == buffer.Length)
+                        {
+                            if (buffer.Length + currLenght <= maxLength)
+                            {
+                                line.Add(buffer.ToString());
+                                WriteOutput(line, maxLength, name);
+                                currLenght = 0;
+                                line.Clear();
+                                buffer.Clear();
+                            }
+                            else 
+                            {
+                                WriteOutput(line, maxLength, name);
+                                line.Clear();
+                                line.Add(buffer.ToString());
+                                buffer.Clear();
+                                WriteOutput(line, maxLength, name);
+                                line.Clear();
+                                currLenght = 0;
+                            }
+                            
+                            line.Add(" ");
+                            WriteOutput(line, maxLength, name);
+                            line.Clear();
+                            endOfLine = false;
+
+                        }
+                        // there was a line break but not an empty line after it
+                        else if (character == '\n' && endOfLine && (lastBufferLen != buffer.Length || lastLineLen != line.Count))
+                        {
+                            endOfLine = false;
+                        }
+
+                        if (character == '\n' && endOfLine == false)
+                        {
+                            lastBufferLen = buffer.Length;
+                            lastLineLen = line.Count;
+                            endOfLine = true;
+                        }
                         character = (char)inputFile.reader.Read();
                     }
                 }
+                //if there is something left for output
+                WriteOutput(line, maxLength, name);
+
             }
         }
-
-        public int ManageLine(StringBuilder buffer, List<string> line, int maxLength, string name, int currLenght)
-        {
-           
-
-            return currLenght;
-        }
+        
         public void WriteOutput(List<string> line, int maxLength, string name)
         {
             StringBuilder builder = new StringBuilder();
 
-            foreach (var word in line)
-            {
-                if (word == line[line.Count -1])
-                {
-                    builder.Append(word).Append('\n');
-                }
-                else
-                {
-                    builder.Append(word).Append(" ");
-                }
-               
-            }
-            Console.Write(builder);
             
 
-            try
+            using (StreamWriter writer = new StreamWriter(name, append: true))
             {
-                using (StreamWriter writer = new StreamWriter(name, append: true))
-                {
-                    
-                    
-                }
+
+
             }
-            catch (IOException)
-            {
-                Console.WriteLine("File Error");
-                throw;
-            }
+           
         }
     }
 
