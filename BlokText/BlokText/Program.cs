@@ -234,20 +234,16 @@ namespace BlokText
                         }
                         else
                         {
-                            int spacesToAdd = (spacesLeft / gapCount) + (spacesLeft % gapCount);
+                            int spacesToAdd = spacesLeft / gapCount;
                             if (line.IndexOf(word) == line.Count - 1)
                             {
                                 builder.Append(word).Append(Environment.NewLine);
                             }
-                            else if (spacesToAdd < 1)
-                            {
-                                builder.Append(word).Append(" ");
-                            }
                             else
                             {
-                                builder.Append(word).Append(' ', spacesToAdd + 1);
-                                spacesLeft -= spacesToAdd;
-                                --gapCount;
+                                builder.Append(word).Append(' ', spacesToAdd );
+                                spacesLeft -= spacesToAdd-1;
+                                    --gapCount;
                             }
 
                         }
