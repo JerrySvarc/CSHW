@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 
 namespace BlokText
@@ -83,15 +84,13 @@ namespace BlokText
             StringBuilder buffer = new StringBuilder();
             List<string> line = new List<string>();
             bool endOfLine = false;
-            bool endOfFile = false;
+            int emptyLines = 0;
             int currLenght = 0;
-            int lastBufferLen = 0;
-            int lastLineLen = 0;
+            
 
             while (!inputFile.reader.EndOfStream)
             {
-                char character = (char)inputFile.reader.Read(); 
-                //skip all whitespace characters before first word
+                char character = (char)inputFile.reader.Read();
                 while (character != '\uffff' && (character == '\n' || character == '\t' || character == ' '))
                 {
                     character = (char)inputFile.reader.Read();
@@ -99,34 +98,31 @@ namespace BlokText
 
                 while (character != '\uffff')
                 {
-                    //read a word and add it to buffer
                     while (character != '\uffff' && character != '\n' && character != '\t' && character != ' ')
                     {
                         buffer.Append(character);
                         character = (char)inputFile.reader.Read();
                     }
-                    //if a word is longer than the max length of line, output current line, add the buffer to a new line and output it
+
                     if (buffer.Length >= maxLength)
                     {
-                        WriteOutput(line, maxLength, name);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         buffer.Clear();
-                        WriteOutput(line, maxLength, name);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         currLenght = 0;
                     }
-                    //if a character fits on a line, add it 
                     else if (buffer.Length + currLenght <= maxLength)
                     {
                         currLenght += buffer.Length + 1;
                         line.Add(buffer.ToString());
                         buffer.Clear();
                     }
-                    //if the word fits on a line but can't be added to a current line, display current line, then add the word to the next line
                     else
                     {
-                        WriteOutput(line, maxLength, name);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         currLenght = buffer.Length + 1;
@@ -135,71 +131,147 @@ namespace BlokText
 
                     while (character != '\uffff' && (character == '\n' || character == '\t' || character == ' '))
                     {
-                        //if there was a new line but no characters were read -> end of paragraph
-                        if (character == '\n' && endOfLine && lastLineLen == line.Count && lastBufferLen == buffer.Length)
+                        if (character == '\n' && endOfLine)
                         {
-                            if (buffer.Length + currLenght <= maxLength)
-                            {
-                                line.Add(buffer.ToString());
-                                WriteOutput(line, maxLength, name);
-                                currLenght = 0;
-                                line.Clear();
-                                buffer.Clear();
-                            }
-                            else 
-                            {
-                                WriteOutput(line, maxLength, name);
-                                line.Clear();
-                                line.Add(buffer.ToString());
-                                buffer.Clear();
-                                WriteOutput(line, maxLength, name);
-                                line.Clear();
-                                currLenght = 0;
-                            }
-                            
-                            line.Add(" ");
-                            WriteOutput(line, maxLength, name);
-                            line.Clear();
-                            endOfLine = false;
-
-                        }
-                        // there was a line break but not an empty line after it
-                        else if (character == '\n' && endOfLine && (lastBufferLen != buffer.Length || lastLineLen != line.Count))
-                        {
-                            endOfLine = false;
+                            ++emptyLines;
                         }
 
-                        if (character == '\n' && endOfLine == false)
+                        if (character == '\n' && !endOfLine)
                         {
-                            lastBufferLen = buffer.Length;
-                            lastLineLen = line.Count;
                             endOfLine = true;
                         }
                         character = (char)inputFile.reader.Read();
                     }
+
+                    endOfLine = false;
+
+                    if (emptyLines > 0)
+                    {
+                        if (buffer.Length + currLenght <= maxLength)
+                        {
+                            if (buffer.Length != 0)
+                            {
+                                line.Add(buffer.ToString());
+                            }
+                            WriteOutput(line, maxLength, name, true);
+                            currLenght = 0;
+                        }
+                        else if (buffer.Length >= maxLength)
+                        {
+                            WriteOutput(line, maxLength, name, false);
+                            line.Clear();
+                            if (buffer.Length != 0)
+                            {
+                                line.Add(buffer.ToString());
+                            }
+                            WriteOutput(line, maxLength, name, true);
+                            currLenght = 0;
+                        }
+                        else
+                        {
+                            WriteOutput(line, maxLength, name, false);
+                        }
+                        buffer.Clear();
+                        line.Clear();
+
+                        line.Add("");
+                        WriteOutput(line, maxLength, name, false);
+                        line.Clear();
+                        emptyLines = 0;
+                    }
                 }
-                //if there is something left for output
-                WriteOutput(line, maxLength, name);
-
             }
-        }
-        
-        public void WriteOutput(List<string> line, int maxLength, string name)
-        {
-            StringBuilder builder = new StringBuilder();
 
-            
-
-            using (StreamWriter writer = new StreamWriter(name, append: true))
+            if (line.Count!=0)
             {
-
-
+                WriteOutput(line, maxLength, name, true);
             }
            
         }
+
+        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            int gapCount = line.Count - 1;
+            int charCount = 0;
+            foreach (var word in line)
+            {
+                charCount += word.Length;
+            }
+
+            int spacesLeft = maxLength - (charCount + gapCount);
+
+
+            foreach (var word in line)
+            {
+                if (word != "")
+                {
+                    if (paraEnd)
+                    {
+                        if (line.IndexOf(word) == line.Count - 1)
+                        {
+                            builder.Append(word).Append(Environment.NewLine);
+                        }
+                        else
+                        {
+                            builder.Append(word).Append(" ");
+                        }
+                    }
+                    else if (!paraEnd && gapCount != 0)
+                    {
+                        if (spacesLeft % gapCount == 0)
+                        {
+                            int spacesToAdd = spacesLeft / gapCount;
+                            if (line.IndexOf(word) == line.Count - 1)
+                            {
+                                builder.Append(word).Append(Environment.NewLine);
+                            }
+                            else
+                            {
+                                builder.Append(word).Append(' ', spacesToAdd + 1);
+                            }
+                        }
+                        else
+                        {
+                            int spacesToAdd = (spacesLeft / gapCount) + (spacesLeft % gapCount);
+                            if (line.IndexOf(word) == line.Count - 1)
+                            {
+                                builder.Append(word).Append(Environment.NewLine);
+                            }
+                            else if (spacesToAdd < 1)
+                            {
+                                builder.Append(word).Append(" ");
+                            }
+                            else
+                            {
+                                builder.Append(word).Append(' ', spacesToAdd + 1);
+                                spacesLeft -= spacesToAdd;
+                                --gapCount;
+                            }
+
+                        }
+
+                    }
+                    else if (gapCount == 0)
+                    {
+                        builder.Append(word).Append(Environment.NewLine);
+                    }
+                }
+                else
+                {
+                    builder.Append(Environment.NewLine);
+                }
+            }
+
+            // Console.Write(builder);
+            using (StreamWriter writer = new StreamWriter(name, append: true))
+            {
+                writer.Write(builder);
+            }
+
+
+            
+        }
     }
-
-
-
-
 }
