@@ -24,6 +24,7 @@ namespace BlokText
                     reader.GetInput(args[0]);
                     writer.CreateOutputFile(args[1]);
                     writer.FormatFile(reader, maxLength, args[1]);
+                    reader.reader.Dispose();
                 }
                 catch (FileNotFoundException)
                 {
@@ -106,11 +107,11 @@ namespace BlokText
 
                     if (buffer.Length >= maxLength)
                     {
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         buffer.Clear();
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         currLenght = 0;
                     }
@@ -122,7 +123,7 @@ namespace BlokText
                     }
                     else
                     {
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         currLenght = buffer.Length + 1;
@@ -145,7 +146,7 @@ namespace BlokText
 
                     endOfLine = false;
 
-                    if (emptyLines > 0)
+                    if (character != '\uffff' && emptyLines > 0)
                     {
                         if (buffer.Length + currLenght <= maxLength)
                         {
@@ -153,43 +154,43 @@ namespace BlokText
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true);
+                            WriteOutput(line, maxLength, name, true, false);
                             currLenght = 0;
                         }
                         else if (buffer.Length >= maxLength)
                         {
-                            WriteOutput(line, maxLength, name, false);
+                            WriteOutput(line, maxLength, name, false, false);
                             line.Clear();
                             if (buffer.Length != 0)
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true);
+                            WriteOutput(line, maxLength, name, true, false);
                             currLenght = 0;
                         }
                         else
                         {
-                            WriteOutput(line, maxLength, name, false);
+                            WriteOutput(line, maxLength, name, false, false);
                         }
                         buffer.Clear();
                         line.Clear();
 
                         line.Add("");
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         emptyLines = 0;
                     }
                 }
             }
 
-            if (line.Count!=0)
+            if (line.Count != 0)
             {
-                WriteOutput(line, maxLength, name, true);
+                WriteOutput(line, maxLength, name, true,true);
             }
            
         }
 
-        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd)
+        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd, bool endOfFile)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -202,72 +203,90 @@ namespace BlokText
 
             int spacesLeft = maxLength - (charCount + gapCount);
 
-
-            foreach (var word in line)
+            if (line.Count!= 0 && line[0] != "" )
             {
-                if (word != "")
+                if (paraEnd)
                 {
-                    if (paraEnd)
+                    foreach (var word in line)
                     {
                         if (line.IndexOf(word) == line.Count - 1)
                         {
-                            builder.Append(word).Append(Environment.NewLine);
+                            builder.Append(word);
                         }
                         else
                         {
                             builder.Append(word).Append(" ");
                         }
                     }
-                    else if (!paraEnd && gapCount != 0)
+                }
+                else if (!paraEnd && gapCount != 0)
+                {
+                    if (spacesLeft % gapCount == 0)
                     {
-                        if (spacesLeft % gapCount == 0)
+                        foreach (var word in line)
                         {
                             int spacesToAdd = spacesLeft / gapCount;
                             if (line.IndexOf(word) == line.Count - 1)
                             {
-                                builder.Append(word).Append(Environment.NewLine);
+                                builder.Append(word);
                             }
                             else
                             {
                                 builder.Append(word).Append(' ', spacesToAdd + 1);
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        List<char> differentSpaces = new List<char>();
+                        foreach (var word in line)
                         {
-                            int spacesToAdd = spacesLeft / gapCount;
-                            if (line.IndexOf(word) == line.Count - 1)
+                            foreach (var character in word)
                             {
-                                builder.Append(word).Append(Environment.NewLine);
-                            }
-                            else
-                            {
-                                builder.Append(word).Append(' ', spacesToAdd );
-                                spacesLeft -= spacesToAdd-1;
-                                    --gapCount;
+                                differentSpaces.Add(character);
                             }
 
+                            if (line.IndexOf(word) != line.Count - 1)
+                            {
+                                differentSpaces.Add(' ');
+                            }
                         }
 
+                        while (differentSpaces.Count < maxLength)
+                        {
+                            for (int i = 0; i < differentSpaces.Count; i++)
+                            {
+                                if (differentSpaces[i] == ' ' && differentSpaces.Count < maxLength)
+                                {
+                                    differentSpaces.Insert(i, ' ');
+                                    ++i;
+                                }
+                            }
+                        }
+
+                        foreach (var word in differentSpaces)
+                        {
+                            builder.Append(word);
+                        }
                     }
-                    else if (gapCount == 0)
-                    {
-                        builder.Append(word).Append(Environment.NewLine);
-                    }
+
                 }
-                else
+                else if (gapCount == 0)
                 {
-                    builder.Append(Environment.NewLine);
+                    builder.Append(line[0]);
                 }
             }
+            else if(line.Count != 0 && !endOfFile)
+            {
+                builder.Append(Environment.NewLine);
+            }
 
-            // Console.Write(builder);
+            Console.Write(builder);
             using (StreamWriter writer = new StreamWriter(name, append: true))
             {
-                writer.Write(builder);
+                
             }
-
-
-            
         }
+
     }
 }

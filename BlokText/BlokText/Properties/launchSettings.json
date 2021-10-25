@@ -2,7 +2,7 @@
   "profiles": {
     "BlokText": {
       "commandName": "Project",
-      "commandLineArgs": "in.txt result.txt 40"
+      "commandLineArgs": "01-in.txt result.txt 17"
     }
   }
 }
