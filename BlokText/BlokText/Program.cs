@@ -173,11 +173,13 @@ namespace BlokText
                         }
                         buffer.Clear();
                         line.Clear();
-
-                        line.Add("");
-                        WriteOutput(line, maxLength, name, false);
-                        line.Clear();
-                        emptyLines = 0;
+                        if (character != '\uffff')
+                        {
+                            line.Add("");
+                            WriteOutput(line, maxLength, name, false);
+                            line.Clear();
+                            emptyLines = 0;
+                        }
                     }
                 }
             }
@@ -202,7 +204,7 @@ namespace BlokText
 
             int spacesLeft = maxLength - (charCount + gapCount);
 
-            if (line.Count != 0 && line[0] != "")
+            if (line.Count != 0 && line[0] != "" && line[0] != "\n")
             {
                 if (paraEnd)
                 {
@@ -277,12 +279,12 @@ namespace BlokText
                     builder.Append(line[0]).Append(Environment.NewLine);
                 }
             }
-            else if(line.Count == 1)
+            else if(line.Count != 0)
             {
                 builder.Append(Environment.NewLine);
             }
 
-            //Console.Write(builder);
+            Console.Write(builder);
             using (StreamWriter writer = new StreamWriter(name, append: true))
             {
                 writer.Write(builder);
