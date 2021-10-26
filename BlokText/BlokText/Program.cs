@@ -24,7 +24,6 @@ namespace BlokText
                     reader.GetInput(args[0]);
                     writer.CreateOutputFile(args[1]);
                     writer.FormatFile(reader, maxLength, args[1]);
-                    reader.reader.Dispose();
                 }
                 catch (FileNotFoundException)
                 {
@@ -87,7 +86,7 @@ namespace BlokText
             bool endOfLine = false;
             int emptyLines = 0;
             int currLenght = 0;
-            
+
 
             while (!inputFile.reader.EndOfStream)
             {
@@ -107,11 +106,11 @@ namespace BlokText
 
                     if (buffer.Length >= maxLength)
                     {
-                        WriteOutput(line, maxLength, name, false, false);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         buffer.Clear();
-                        WriteOutput(line, maxLength, name, false, false);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         currLenght = 0;
                     }
@@ -123,7 +122,7 @@ namespace BlokText
                     }
                     else
                     {
-                        WriteOutput(line, maxLength, name, false, false);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         currLenght = buffer.Length + 1;
@@ -146,7 +145,7 @@ namespace BlokText
 
                     endOfLine = false;
 
-                    if (character != '\uffff' && emptyLines > 0)
+                    if (emptyLines > 0)
                     {
                         if (buffer.Length + currLenght <= maxLength)
                         {
@@ -154,29 +153,29 @@ namespace BlokText
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true, false);
+                            WriteOutput(line, maxLength, name, true);
                             currLenght = 0;
                         }
                         else if (buffer.Length >= maxLength)
                         {
-                            WriteOutput(line, maxLength, name, false, false);
+                            WriteOutput(line, maxLength, name, false);
                             line.Clear();
                             if (buffer.Length != 0)
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true, false);
+                            WriteOutput(line, maxLength, name, true);
                             currLenght = 0;
                         }
                         else
                         {
-                            WriteOutput(line, maxLength, name, false, false);
+                            WriteOutput(line, maxLength, name, false);
                         }
                         buffer.Clear();
                         line.Clear();
 
                         line.Add("");
-                        WriteOutput(line, maxLength, name, false, false);
+                        WriteOutput(line, maxLength, name, false);
                         line.Clear();
                         emptyLines = 0;
                     }
@@ -185,12 +184,12 @@ namespace BlokText
 
             if (line.Count != 0)
             {
-                WriteOutput(line, maxLength, name, true,true);
+                WriteOutput(line, maxLength, name, true);
             }
-           
+
         }
 
-        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd, bool endOfFile)
+        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -203,7 +202,7 @@ namespace BlokText
 
             int spacesLeft = maxLength - (charCount + gapCount);
 
-            if (line.Count!= 0 && line[0] != "" )
+            if (line.Count != 0 && line[0] != "")
             {
                 if (paraEnd)
                 {
@@ -211,7 +210,7 @@ namespace BlokText
                     {
                         if (line.IndexOf(word) == line.Count - 1)
                         {
-                            builder.Append(word);
+                            builder.Append(word).Append(Environment.NewLine);
                         }
                         else
                         {
@@ -228,7 +227,7 @@ namespace BlokText
                             int spacesToAdd = spacesLeft / gapCount;
                             if (line.IndexOf(word) == line.Count - 1)
                             {
-                                builder.Append(word);
+                                builder.Append(word).Append(Environment.NewLine);
                             }
                             else
                             {
@@ -268,25 +267,26 @@ namespace BlokText
                         {
                             builder.Append(word);
                         }
+
+                        builder.Append(Environment.NewLine);
                     }
 
                 }
                 else if (gapCount == 0)
                 {
-                    builder.Append(line[0]);
+                    builder.Append(line[0]).Append(Environment.NewLine);
                 }
             }
-            else if(line.Count != 0 && !endOfFile)
+            else if(line.Count == 1)
             {
                 builder.Append(Environment.NewLine);
             }
 
-            Console.Write(builder);
+            //Console.Write(builder);
             using (StreamWriter writer = new StreamWriter(name, append: true))
             {
-                
+                writer.Write(builder);
             }
         }
-
     }
 }
