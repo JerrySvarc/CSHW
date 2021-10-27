@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Xml;
 
 namespace BlokText
 {
@@ -106,11 +107,11 @@ namespace BlokText
 
                     if (buffer.Length >= maxLength)
                     {
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         buffer.Clear();
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         currLenght = 0;
                     }
@@ -122,7 +123,7 @@ namespace BlokText
                     }
                     else
                     {
-                        WriteOutput(line, maxLength, name, false);
+                        WriteOutput(line, maxLength, name, false, false);
                         line.Clear();
                         line.Add(buffer.ToString());
                         currLenght = buffer.Length + 1;
@@ -153,30 +154,30 @@ namespace BlokText
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true);
+                            WriteOutput(line, maxLength, name, true, false);
                             currLenght = 0;
                         }
                         else if (buffer.Length >= maxLength)
                         {
-                            WriteOutput(line, maxLength, name, false);
+                            WriteOutput(line, maxLength, name, false, false);
                             line.Clear();
                             if (buffer.Length != 0)
                             {
                                 line.Add(buffer.ToString());
                             }
-                            WriteOutput(line, maxLength, name, true);
+                            WriteOutput(line, maxLength, name, true, false);
                             currLenght = 0;
                         }
                         else
                         {
-                            WriteOutput(line, maxLength, name, false);
+                            WriteOutput(line, maxLength, name, false, false);
                         }
                         buffer.Clear();
                         line.Clear();
                         if (character != '\uffff')
                         {
                             line.Add("");
-                            WriteOutput(line, maxLength, name, false);
+                            WriteOutput(line, maxLength, name, false, false);
                             line.Clear();
                             emptyLines = 0;
                         }
@@ -186,12 +187,12 @@ namespace BlokText
 
             if (line.Count != 0)
             {
-                WriteOutput(line, maxLength, name, true);
+                WriteOutput(line, maxLength, name, true, true);
             }
 
         }
 
-        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd)
+        public void WriteOutput(List<string> line, int maxLength, string name, bool paraEnd, bool endOfFile)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -265,9 +266,9 @@ namespace BlokText
                             }
                         }
 
-                        foreach (var word in differentSpaces)
+                        foreach (var character in differentSpaces)
                         {
-                            builder.Append(word);
+                            builder.Append(character);
                         }
 
                         builder.Append(Environment.NewLine);
@@ -284,10 +285,18 @@ namespace BlokText
                 builder.Append(Environment.NewLine);
             }
 
-            Console.Write(builder);
-            using (StreamWriter writer = new StreamWriter(name, append: true))
+            //Console.Write(builder);
+            using (StreamWriter writer = new StreamWriter(name, append:true))
             {
-                writer.Write(builder);
+                if (endOfFile)
+                {
+                    writer.Write(builder.ToString().TrimEnd() + "\n");
+                }
+                else
+                { 
+                    writer.Write(builder);
+                }
+                
             }
         }
     }
