@@ -1,0 +1,238 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+
+namespace Huffman
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Argument Error");
+            }
+            else
+            {
+                try
+                {
+                    Tree tree = new Tree();
+                    PriorityQueue queue = new PriorityQueue();
+                    Input input = new Input(args[0]);
+                    Counter counter = new Counter();
+                    tree.BuildTree(input,queue,counter);
+
+                }
+                catch (FileNotFoundException)
+                {
+                    WriteFileError();
+                }
+                catch (IOException)
+                {
+                    WriteFileError();
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    WriteFileError();
+                }
+                catch (System.Security.SecurityException)
+                {
+                    WriteFileError();
+                }
+            }
+        }
+        static void WriteFileError()
+        {
+            Console.WriteLine("File Error");
+        }
+        
+    }
+
+    class Outputer
+    {
+        public void WriteTree(Node node)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            if (node.Symbol != -1)
+            {
+                Console.Write("*" + node.Symbol + ":" + node.Weight + " ");
+            }
+            else
+            {
+                Console.Write(node.Weight + " ");
+            }
+            
+            WriteTree(node.LeftChild);
+            WriteTree(node.RightChild);
+        }
+    }
+
+    class Counter
+    {
+        private Dictionary<int, int> SymbolCount = new Dictionary<int, int>();
+        public Dictionary<int, int> GetSymbolCount(Input input)
+        {
+            int symbol = input.ReadSymbol();
+            while (symbol != -1)
+            {
+                if (SymbolCount.ContainsKey(symbol))
+                {
+                    SymbolCount[symbol] += 1;
+                }
+                else
+                {
+                    SymbolCount.Add(symbol, 1);
+                }
+                symbol = input.ReadSymbol();
+            }
+
+            return SymbolCount;
+        }
+
+        public void LoadQueue(Dictionary<int, int> symbolCount, PriorityQueue queue)
+        {
+            foreach (var symbol in symbolCount)
+            {
+                Node node = new Node(null, null, symbol.Key, symbol.Value, 0);
+            }
+        }
+    }
+    
+    class Input
+    {
+        public FileStream file;
+
+        public Input(string name)
+        {
+            file = File.Open(name, FileMode.Open);
+        }
+
+        public int ReadSymbol()
+        {
+            int value = file.ReadByte();
+            return value;
+        }
+    }
+    
+    class Node
+    {
+        public Node LeftChild{ get; }
+        public Node RightChild { get; }
+        public int Symbol { get; }
+        public int Weight { get; }
+
+        public int Turn { get; }
+        public Node(Node leftNode, Node rightNode, int symbol, int weight, int turn)
+        {
+            LeftChild = leftNode;
+            RightChild = rightNode;
+            Symbol = symbol;
+            Weight = weight;
+            Turn = turn;
+        }
+    }
+
+    class Tree
+    {
+        public List<Node> tree = new List<Node>();
+        public  Node Root;
+        public void AddNode(Node node)
+        {
+            tree.Add(node);
+        }
+
+        public void BuildTree(Input input, PriorityQueue queue, Counter counter)
+        {
+            counter.LoadQueue(counter.GetSymbolCount(input), queue);
+            int turn = 0;
+            while (queue.GetHeapCount() > 2)
+            {
+                Node left = queue.Dequeue();
+                Node right = queue.Dequeue();
+
+                Node newNode = new Node(left, right, -1, left.Weight + right.Weight, turn+1);
+
+                tree.Add(left);
+                tree.Add(right);
+                tree.Add(newNode);
+                queue.Queue(newNode, newNode.Weight);
+            }
+
+            Root = queue.Dequeue();
+        }
+
+        public void OutputTree(Outputer output)
+        {
+            output.WriteTree(Root);
+        }
+    }
+
+    class PriorityQueue
+    {
+        private SortedSet<Tuple<Node, int>>
+            heap = new SortedSet<Tuple<Node, int>>(
+                Comparer<Tuple<Node, int>>.Create(
+                    (x, y) => {
+                        if (x.Item2 == y.Item2)
+                        {
+                            if (x.Item1.Turn == 0 && y.Item1.Turn != 0)
+                            {
+                                return -1;
+                            }
+                            
+                            if (y.Item1.Turn == 0 && x.Item1.Turn != 0)
+                            {
+                                return 1;
+                            }
+                            
+                            if (x.Item1.Symbol < y.Item1.Symbol)
+                            {
+                                return -1;
+                            }
+                            else if(y.Item1.Symbol < x.Item1.Symbol)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                if (x.Item1.Turn < y.Item1.Turn)
+                                {
+                                    return -1 ;
+                                }
+                                else
+                                {
+                                    return 1 ;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return x.Item2 - y.Item2;
+                        }
+                    }
+                ));
+
+            public Node Dequeue()
+            {
+                IEnumerator<Tuple<Node, int>> enumerator = heap.GetEnumerator();
+                enumerator.MoveNext();
+                heap.Remove(enumerator.Current);
+                return enumerator.Current.Item1;
+            }
+
+            public void Queue(Node node, int weight)
+            {
+                heap.Add(new Tuple<Node, int>(node, weight));
+            }
+
+            public int GetHeapCount()
+            {
+                return heap.Count;
+            }
+    }
+}

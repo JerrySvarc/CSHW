@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "X91p90rMc5EKwYOcOEinJb5QkHWBkSXQesJZDg+jx1riiZSiRTMQ8EgMUxID3qGadI568sexct/V6iqNXwBahg==",
+  "success": true,
+  "projectFilePath": "/home/jerry/Dokumenty/Matfyz/Zima2122/ProgrammingCSharpHW/Huffman1/Huffman1/Huffman1.csproj",
+  "expectedPackageFiles": [
+    "/home/jerry/.nuget/packages/microsoft.aspnetcore.app.ref/5.0.0/microsoft.aspnetcore.app.ref.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
