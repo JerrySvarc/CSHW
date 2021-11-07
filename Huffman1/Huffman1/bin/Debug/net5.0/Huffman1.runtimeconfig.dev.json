@@ -1,8 +1,8 @@
 {
   "runtimeOptions": {
     "additionalProbingPaths": [
-      "/home/jerry/.dotnet/store/|arch|/|tfm|",
-      "/home/jerry/.nuget/packages"
+      "C:\\Users\\skejt\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\skejt\\.nuget\\packages"
     ]
   }
 }

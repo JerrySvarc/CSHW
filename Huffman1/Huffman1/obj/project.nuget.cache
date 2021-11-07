@@ -1,10 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "X91p90rMc5EKwYOcOEinJb5QkHWBkSXQesJZDg+jx1riiZSiRTMQ8EgMUxID3qGadI568sexct/V6iqNXwBahg==",
+  "dgSpecHash": "o/0jg6XXVxrkF7x9MKcJXuSFhHijOfIOx+uzy9b99YGxO0qSl2sE6fiH/FGfs4XtG2lramWacVgO506QMBa03g==",
   "success": true,
-  "projectFilePath": "/home/jerry/Dokumenty/Matfyz/Zima2122/ProgrammingCSharpHW/Huffman1/Huffman1/Huffman1.csproj",
-  "expectedPackageFiles": [
-    "/home/jerry/.nuget/packages/microsoft.aspnetcore.app.ref/5.0.0/microsoft.aspnetcore.app.ref.5.0.0.nupkg.sha512"
-  ],
+  "projectFilePath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

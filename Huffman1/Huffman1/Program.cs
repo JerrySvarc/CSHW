@@ -17,12 +17,13 @@ namespace Huffman
             {
                 try
                 {
+                    Outputer output = new Outputer();
                     Tree tree = new Tree();
                     PriorityQueue queue = new PriorityQueue();
                     Input input = new Input(args[0]);
                     Counter counter = new Counter();
                     tree.BuildTree(input,queue,counter);
-
+                    tree.OutputTree(output);
                 }
                 catch (FileNotFoundException)
                 {
@@ -89,8 +90,8 @@ namespace Huffman
                     SymbolCount.Add(symbol, 1);
                 }
                 symbol = input.ReadSymbol();
+                
             }
-
             return SymbolCount;
         }
 
@@ -99,6 +100,7 @@ namespace Huffman
             foreach (var symbol in symbolCount)
             {
                 Node node = new Node(null, null, symbol.Key, symbol.Value, 0);
+                queue.Queue(node, node.Weight);
             }
         }
     }
@@ -139,7 +141,8 @@ namespace Huffman
 
     class Tree
     {
-        public List<Node> tree = new List<Node>();
+        public HashSet<Node> tree = new HashSet<Node>();
+        //public List<Node> tree = new List<Node>();
         public  Node Root;
         public void AddNode(Node node)
         {
@@ -150,13 +153,12 @@ namespace Huffman
         {
             counter.LoadQueue(counter.GetSymbolCount(input), queue);
             int turn = 0;
-            while (queue.GetHeapCount() > 2)
+            while (queue.GetHeapCount() > 1)
             {
                 Node left = queue.Dequeue();
                 Node right = queue.Dequeue();
-
-                Node newNode = new Node(left, right, -1, left.Weight + right.Weight, turn+1);
-
+                ++turn;
+                Node newNode = new Node(left, right, -1, left.Weight + right.Weight, turn);
                 tree.Add(left);
                 tree.Add(right);
                 tree.Add(newNode);
@@ -164,6 +166,7 @@ namespace Huffman
             }
 
             Root = queue.Dequeue();
+            
         }
 
         public void OutputTree(Outputer output)
@@ -180,46 +183,46 @@ namespace Huffman
                     (x, y) => {
                         if (x.Item2 == y.Item2)
                         {
-                            if (x.Item1.Turn == 0 && y.Item1.Turn != 0)
+                            if (x.Item1.Turn ==0 && y.Item1.Turn != 0)
                             {
                                 return -1;
                             }
-                            
-                            if (y.Item1.Turn == 0 && x.Item1.Turn != 0)
+                            if (x.Item1.Turn != 0 && y.Item1.Turn == 0)
                             {
                                 return 1;
                             }
-                            
-                            if (x.Item1.Symbol < y.Item1.Symbol)
+
+                            if (x.Item1.Turn == 0 && y.Item1.Turn == 0)
                             {
-                                return -1;
+                                if (x.Item1.Symbol < y.Item1.Symbol)
+                                {
+                                    return -1;
+                                }
+                                if (x.Item1.Symbol > y.Item1.Symbol)
+                                {
+                                    return 1;
+                                }
                             }
-                            else if(y.Item1.Symbol < x.Item1.Symbol)
-                            {
-                                return 1;
-                            }
-                            else
+
+                            if (x.Item1.Turn != 0 && y.Item1.Turn != 0)
                             {
                                 if (x.Item1.Turn < y.Item1.Turn)
                                 {
-                                    return -1 ;
+                                    return -1;
                                 }
-                                else
+                                if (x.Item1.Turn > y.Item1.Turn)
                                 {
-                                    return 1 ;
+                                    return 1;
                                 }
                             }
                         }
-                        else
-                        {
-                            return x.Item2 - y.Item2;
-                        }
+                        return x.Item2 - y.Item2;
                     }
                 ));
 
             public Node Dequeue()
             {
-                IEnumerator<Tuple<Node, int>> enumerator = heap.GetEnumerator();
+                using IEnumerator<Tuple<Node, int>> enumerator = heap.GetEnumerator();
                 enumerator.MoveNext();
                 heap.Remove(enumerator.Current);
                 return enumerator.Current.Item1;
