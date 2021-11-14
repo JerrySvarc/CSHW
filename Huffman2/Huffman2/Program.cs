@@ -9,7 +9,7 @@ namespace Huffman2
     {
         static void Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length != 2)
             {
                 Console.WriteLine("Argument Error");
             }
@@ -17,12 +17,16 @@ namespace Huffman2
             {
                 try
                 {
-                    Outputer output = new Outputer();
+                    Outputer output = new Outputer(args[1]);
                     Tree tree = new Tree();
                     PriorityQueue queue = new PriorityQueue();
                     Input input = new Input(args[0]);
                     Counter counter = new Counter();
+
+                    //TODO: Build it all together - finish main()
                     tree.BuildTree(input, queue, counter);
+
+
                     tree.OutputTree(output);
                 }
                 catch (FileNotFoundException)
@@ -52,6 +56,20 @@ namespace Huffman2
 
     class Outputer
     {
+        BinaryWriter writer;
+        public Outputer(string fileName)
+        {
+            writer = new BinaryWriter(new FileStream(fileName, FileMode.Create));
+        }
+        //TODO: Implement writing output
+        public void WriteOutput(byte value, BinaryWriter writer)
+        {
+
+            
+
+
+        }
+
         public void WriteTree(Node node)
         {
             if (node == null)
@@ -71,6 +89,10 @@ namespace Huffman2
             WriteTree(node.LeftChild);
             WriteTree(node.RightChild);
         }
+
+
+
+
     }
 
     class Counter
@@ -142,7 +164,7 @@ namespace Huffman2
     class Tree
     {
         public HashSet<Node> tree = new HashSet<Node>();
-
+        
         public Node Root;
         public void AddNode(Node node)
         {
@@ -166,7 +188,6 @@ namespace Huffman2
             }
 
             Root = queue.Dequeue();
-
         }
 
         public void OutputTree(Outputer output)
@@ -238,4 +259,14 @@ namespace Huffman2
             return heap.Count;
         }
     }
+    //TODO: implement building output bytes
+    class ByteBuilder
+    {
+
+
+
+
+
+    }
+
 }
