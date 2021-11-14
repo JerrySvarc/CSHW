@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "o/0jg6XXVxrkF7x9MKcJXuSFhHijOfIOx+uzy9b99YGxO0qSl2sE6fiH/FGfs4XtG2lramWacVgO506QMBa03g==",
+  "dgSpecHash": "WEvsAgJOvtKJikjCjAB7Ho+bi/ZlRjJ4Jg3NBFCSb1HUdLrWsHzUEWsfL037pNi8GBkGLkn9E6/9CvqsjS4DsQ==",
   "success": true,
   "projectFilePath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\skejt\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\5.0.12\\microsoft.netcore.app.host.win-x64.5.0.12.nupkg.sha512"
+  ],
   "logs": []
 }

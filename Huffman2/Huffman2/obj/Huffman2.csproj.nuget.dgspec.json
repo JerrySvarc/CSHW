@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj": {}
+    "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\Huffman2.csproj": {}
   },
   "projects": {
-    "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj": {
+    "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\Huffman2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj",
-        "projectName": "Huffman1",
-        "projectPath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\Huffman1.csproj",
+        "projectUniqueName": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\Huffman2.csproj",
+        "projectName": "Huffman2",
+        "projectPath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\Huffman2.csproj",
         "packagesPath": "C:\\Users\\skejt\\.nuget\\packages\\",
-        "outputPath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman1\\Huffman1\\obj\\",
+        "outputPath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\skejt\\AppData\\Roaming\\NuGet\\NuGet.Config",

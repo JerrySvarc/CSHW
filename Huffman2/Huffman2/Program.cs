@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace Huffman
+namespace Huffman2
 {
     class Program
     {
@@ -22,7 +22,7 @@ namespace Huffman
                     PriorityQueue queue = new PriorityQueue();
                     Input input = new Input(args[0]);
                     Counter counter = new Counter();
-                    tree.BuildTree(input,queue,counter);
+                    tree.BuildTree(input, queue, counter);
                     tree.OutputTree(output);
                 }
                 catch (FileNotFoundException)
@@ -47,7 +47,7 @@ namespace Huffman
         {
             Console.WriteLine("File Error");
         }
-        
+
     }
 
     class Outputer
@@ -67,7 +67,7 @@ namespace Huffman
             {
                 Console.Write(node.Weight + " ");
             }
-            
+
             WriteTree(node.LeftChild);
             WriteTree(node.RightChild);
         }
@@ -90,7 +90,7 @@ namespace Huffman
                     SymbolCount.Add(symbol, 1);
                 }
                 symbol = input.ReadSymbol();
-                
+
             }
             return SymbolCount;
         }
@@ -104,7 +104,7 @@ namespace Huffman
             }
         }
     }
-    
+
     class Input
     {
         public FileStream file;
@@ -120,10 +120,10 @@ namespace Huffman
             return value;
         }
     }
-    
+
     class Node
     {
-        public Node LeftChild{ get; }
+        public Node LeftChild { get; }
         public Node RightChild { get; }
         public int Symbol { get; }
         public int Weight { get; }
@@ -142,8 +142,8 @@ namespace Huffman
     class Tree
     {
         public HashSet<Node> tree = new HashSet<Node>();
-        
-        public  Node Root;
+
+        public Node Root;
         public void AddNode(Node node)
         {
             tree.Add(node);
@@ -166,7 +166,7 @@ namespace Huffman
             }
 
             Root = queue.Dequeue();
-            
+
         }
 
         public void OutputTree(Outputer output)
@@ -183,7 +183,7 @@ namespace Huffman
                     (x, y) => {
                         if (x.Item2 == y.Item2)
                         {
-                            if (x.Item1.Turn ==0 && y.Item1.Turn != 0)
+                            if (x.Item1.Turn == 0 && y.Item1.Turn != 0)
                             {
                                 return -1;
                             }
@@ -220,22 +220,22 @@ namespace Huffman
                     }
                 ));
 
-            public Node Dequeue()
-            {
-                using IEnumerator<Tuple<Node, int>> enumerator = heap.GetEnumerator();
-                enumerator.MoveNext();
-                heap.Remove(enumerator.Current);
-                return enumerator.Current.Item1;
-            }
+        public Node Dequeue()
+        {
+            using IEnumerator<Tuple<Node, int>> enumerator = heap.GetEnumerator();
+            enumerator.MoveNext();
+            heap.Remove(enumerator.Current);
+            return enumerator.Current.Item1;
+        }
 
-            public void Queue(Node node, int weight)
-            {
-                heap.Add(new Tuple<Node, int>(node, weight));
-            }
+        public void Queue(Node node, int weight)
+        {
+            heap.Add(new Tuple<Node, int>(node, weight));
+        }
 
-            public int GetHeapCount()
-            {
-                return heap.Count;
-            }
+        public int GetHeapCount()
+        {
+            return heap.Count;
+        }
     }
 }

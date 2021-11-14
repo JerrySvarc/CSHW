@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "hW//ffguKypMh5S1NPu3QvLlNIg/QxxOD6sWbXrAkalLS9KV20RpVforx9iryCIViRBM19G1ikNGGT46Njz8IA==",
+  "success": true,
+  "projectFilePath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Huffman2\\Huffman2\\Huffman2.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\skejt\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\5.0.12\\microsoft.netcore.app.host.win-x64.5.0.12.nupkg.sha512"
+  ],
+  "logs": []
+}
