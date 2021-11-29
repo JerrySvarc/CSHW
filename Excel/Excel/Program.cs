@@ -136,7 +136,7 @@ namespace Excel
             foreach (string line in input.Lines)
             {
                 string[] cells = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                List<Cell> row = new List<Cell>();
+                var row = new List<Cell>();
                 row[0] = null;
                 int columnIndex = 1;
                 foreach (string cell in cells)
