@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Excel": {
+      "commandName": "Project",
+      "commandLineArgs": "simple.txt result.txt"
+    }
+  }
+}
