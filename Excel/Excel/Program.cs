@@ -335,6 +335,11 @@ namespace Excel
     }
     static class ColumnConverter
     {
+        /// <summary>
+        /// Convert cell index from letter to number representation
+        /// </summary>
+        /// <param name="columnString"></param>
+        /// <returns></returns>
         public static int ConvertCellIndex(string columnString)
         {
             int columnNumber = 0;
