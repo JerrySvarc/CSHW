@@ -1,5 +1,5 @@
-[] [] [] [] [] [] [] #INVVAL [] #INVVAL [] #INVVAL #INVVAL #INVVAL [] [] #INVVAL [] [] [] [] [] [] [] [] 3 [] 
-19 42 42 
+[] 3 57 
+19 99 42 
 #INVVAL 
-#DIV0 #CYCLE #ERROR 
-#MISSOP #FORMULA 
+#CYCLE #CYCLE #CYCLE 
+#CYCLE #FORMULA 

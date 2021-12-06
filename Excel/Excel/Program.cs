@@ -98,7 +98,7 @@ namespace Excel
                             writer.Write("[]");
                         }
                     }
-                    writer.Write(" ");
+                    writer.Write(' ');
                 }
                 writer.Write('\n');
             }
@@ -203,6 +203,11 @@ namespace Excel
                         var cellItem = new ValueCell(rowIndex, columnIndex, 0);
                         row.Add(cellItem);
                     }
+                    else if (int.TryParse(cell, out int cellValue))
+                    {
+                        var cellItem = new ValueCell(rowIndex, columnIndex, cellValue);
+                        row.Add(cellItem);
+                    }
                     else if (cell.Contains('+') || cell.Contains('-') || cell.Contains('*') || cell.Contains('/'))
                     {
                         if (regexFormula.IsMatch(cell))
@@ -218,11 +223,6 @@ namespace Excel
                             var cellItem = new ErrorCell(rowIndex, columnIndex, missFormula);
                             row.Add(cellItem);
                         }
-                    }
-                    else if (int.TryParse(cell, out int cellValue))
-                    {
-                        var cellItem = new ValueCell(rowIndex, columnIndex, cellValue);
-                        row.Add(cellItem);
                     }
                     else
                     {
@@ -240,8 +240,10 @@ namespace Excel
 
                     columnIndex++;
                 }
-
-                ExcelTable.ProvisionalTableBasic.Add(row);
+                if (row.Count != 0)
+                {
+                    ExcelTable.ProvisionalTableBasic.Add(row);
+                }
                 rowIndex++;
                 line = input.GetLine();
             }
@@ -279,12 +281,14 @@ namespace Excel
             const string missDiv = "#DIV0";
             FormulaCell currCell;
             FormulaCell originalCell = cell;
+            List<FormulaCell> cellPath= new List<FormulaCell>();  
             //stack for operations embedded in an operator
             Stack<FormulaCell> stack = new Stack<FormulaCell>();
             int leftOperandRow = 0;
             int leftOperandCol = 0;
             int rightOperandRow = 0;
             int rightOperandCol = 0;
+
             int? leftOperand = null;
             int? rightOperand = null;
 
@@ -292,7 +296,7 @@ namespace Excel
             while (stack.Count > 0)
             {
                 currCell = stack.Pop();
-                
+                cellPath.Add(currCell);
                 leftOperandRow = currCell.LeftOperandIndex[0];
                 leftOperandCol = currCell.LeftOperandIndex[1];
                 rightOperandRow = currCell.RightOperandIndex[0];
@@ -307,9 +311,8 @@ namespace Excel
                     {
 
                         //cycle detection
-                        if (leftOperandCell == originalCell)
-                        {
-                            ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missCycle));
+                        if (cellPath.Contains((FormulaCell)leftOperandCell))
+                        { 
                             foreach (var cycleCell in stack)
                             {
                                 ExcelTable.SetCell(cycleCell.Row, cycleCell.Column, new ErrorCell(cycleCell.Row, cycleCell.Column, missCycle));
@@ -346,23 +349,20 @@ namespace Excel
                     if (rightOperandCell is FormulaCell)
                     {
                         //cycle detection
-                        
-                            if (rightOperandCell == originalCell)
+                        if (cellPath.Contains((FormulaCell)rightOperandCell))
+                        {
+                            foreach (var cycleCell in cellPath)
                             {
-                                ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missCycle));
-                                foreach (var cycleCell in stack)
-                                {
-                                    ExcelTable.SetCell(cycleCell.Row, cycleCell.Column, new ErrorCell(cycleCell.Row, cycleCell.Column, missCycle));
-                                }
-                                stack.Clear();
-                                break;
+                                ExcelTable.SetCell(cycleCell.Row, cycleCell.Column, new ErrorCell(cycleCell.Row, cycleCell.Column, missCycle));
                             }
-                            if (rightOperand == int.MaxValue && (stack.Count == 0 || stack.Peek() != currCell))
-                            {
-                                stack.Push(currCell);
-                            }
-
-                            stack.Push((FormulaCell)rightOperandCell);
+                            stack.Clear();
+                            break;
+                        }
+                        if (rightOperand == int.MaxValue && (stack.Count == 0 || stack.Peek() != currCell))
+                        {
+                            stack.Push(currCell);
+                        }                        
+                        stack.Push((FormulaCell)rightOperandCell);
                         
                     }
                     else if (rightOperandCell is ErrorCell)
@@ -409,9 +409,7 @@ namespace Excel
                             }
                             break;
                     }
-                    currCell.Operation = "";
                 }
-
             }
         }
 

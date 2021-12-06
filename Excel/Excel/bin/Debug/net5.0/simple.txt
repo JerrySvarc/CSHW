@@ -1,5 +1,4 @@
-[] [] [] [] [] [] [] v [] []v [] v [][][]v []v [] [] vvv [] [] [] []    [] [] [] [] 3 =B1*A2
-19 =C1+C2 42
-auto
-=B2/A1 =A1-B4 =C2+A4 
-=chyba =A1+autobus
+[] 3 =B1*A2   19 =C1+C2 42             auto         =B2/C4 =A1-B4 =B1+A5       =A4+B1 =A1+autobus
+
+
+
