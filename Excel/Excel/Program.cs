@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+
 namespace Excel
 {
     class Program
@@ -22,7 +23,8 @@ namespace Excel
                     Input input = new Input(inputFileName);
                     Output output = new Output();
                     TableMaker tableMaker = new TableMaker();
-                    tableMaker.ProcessRows(input);
+                    Regex regexFormula = new Regex(@"^=([A-Z]+)(\d+)([+\-*\/])([A-Z]+)(\d+)");
+                    tableMaker.ProcessRows(input, regexFormula);
                     tableMaker.ResolveAllFormulas();
                     using (var outputFile = File.Open(outputFileName, FileMode.OpenOrCreate))
                     {
@@ -31,7 +33,7 @@ namespace Excel
                             output.WriteTable(writer);
                         }
                     }
-                    
+
                 }
                 catch (FileNotFoundException)
                 {
@@ -57,42 +59,44 @@ namespace Excel
         }
     }
 
-
-
-
     class Input
     {
-        public string[] Lines { get; }
+        StreamReader reader;
 
         public Input(string name)
         {
-            Lines = File.ReadAllLines(name);
+            reader = new StreamReader(name);
+        }
+
+        public string GetLine()
+        {
+            return reader.ReadLine();
         }
     }
 
-    //TODO: implement writing output 
+    //TODO: rewrite writing output 
     class Output
-    { 
+    {
         public void WriteTable(StreamWriter writer)
         {
             foreach (var line in ExcelTable.Table)
             {
                 foreach (var item in line)
                 {
-                    if (item.Error == "")
+                    if(item is ErrorCell)
                     {
-                        if (item.Value == 0)
+                        writer.Write(((ErrorCell)item).Error);
+                    }
+                    else if (item is ValueCell)
+                    {
+                        if(((ValueCell)item).Value != 0)
                         {
-                            writer.Write("[]");
+                            writer.Write(((ValueCell)item).Value);
                         }
                         else
                         {
-                            writer.Write(item.Value);
+                            writer.Write("[]");
                         }
-                    }
-                    else
-                    {
-                        writer.Write(item.Error);
                     }
                     writer.Write(" ");
                 }
@@ -100,250 +104,329 @@ namespace Excel
             }
         }
     }
-
-    class Cell 
+    public abstract class Cell
     {
         public int Column { get; set; }
         public int Row { get; set; }
-        public int Value { get; set; } = 0;
-        public string Error { get; set; } = "";
-        public string Operation { get; set; } = "";
-        public int[] LeftOperandIndex { get; set; }
-        public int[] RightOperandIndex { get; set; }
+        public Cell()
+        {
 
-        public Cell(int row, int column,int value)
+        }
+
+    }
+    class ValueCell : Cell
+    {
+        public int Value { get; set; } = 0;
+
+        public ValueCell(int row, int column, int value)
         {
             Column = column;
             Row = row;
             Value = value;
         }
-        public Cell(int row, int column, string error)
+    }
+    class FormulaCell : Cell
+    {
+        public string Operation { get; set; }
+        public int[] LeftOperandIndex { get; set; }
+        public int[] RightOperandIndex { get; set; }
+
+        public FormulaCell(int row, int column, string operation, int[] leftOperandIndex, int[] rightOperandIndex)
+        {
+            Row = row;
+            Column = column;
+            Operation = operation;
+            LeftOperandIndex = leftOperandIndex;
+            RightOperandIndex = rightOperandIndex;
+        }
+
+    }
+    class ErrorCell : Cell
+    {
+        public string Error { get; set; }
+        public ErrorCell(int row, int column, string error)
         {
             Column = column;
             Row = row;
             Error = error;
         }
-        public Cell(int row,int column )
-        {
-            Column = column;
-            Row = row;
-        }
-        public Cell(int row, int column, string operation, int[] leftOperandIndex, int[] rightOperandIndex)
-        {
-            Row = row;
-            Column = column;
-            Operation = operation;
-            LeftOperandIndex = leftOperandIndex;    
-            RightOperandIndex = rightOperandIndex;
-        }
-
     }
+
+    /// <summary>
+    /// Table representation containing all cell values. Cell can be retrieved by providing row and column indices to the GetCell() method. 
+    /// </summary>
     static class ExcelTable
     {
-        public static List<List<Cell>> Table = new List<List<Cell>>();
-
+        public static List<List<Cell>> ProvisionalTableBasic = new List<List<Cell>>();
+        public static List<Cell>[] Table;
+        public static void ProvisionalToUsable() 
+        {
+            Table = ProvisionalTableBasic.ToArray();
+            ProvisionalTableBasic.Clear();
+        }
         public static Cell GetCell(int row, int column)
         {
-            if (row - 1 > Table.Count || column-1 > Table[row-1].Count)
+            if (row - 1 > Table.Length || column - 1 > Table[row - 1].Count)
             {
                 return null;
             }
-            return Table[row-1][column-1];
+            return Table[row - 1][column - 1];
+        }
+        public static void SetCell(int row, int column, Cell cell)
+        {
+            Table[row - 1][column - 1] = cell;
         }
     }
+
     class TableMaker
     {
         /// <summary>
         /// Function which processes data cells from the input file and adds them to a local representation of the Excel table.
         /// </summary>
         /// <param name="input"></param>
-        public void ProcessRows(Input input)
+        public void ProcessRows(Input input, Regex regexFormula)
         {
+            const string missOp = "#MISSOP";
+            const string missFormula = "#FORMULA";
+            const string missVal = "#INVVAL";
             int rowIndex = 1;
-            Regex regexFormula = new Regex(@"^=([A-Z]+)(\d+)([+\-*\/])([A-Z]+)(\d+)");
-            foreach (string line in input.Lines)
+            string line = input.GetLine();
+            while (line != null)
             {
                 string[] cells = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 var row = new List<Cell>();
                 int columnIndex = 1;
                 foreach (string cell in cells)
                 {
-                    
-                    if (regexFormula.IsMatch(cell))
+                    if (cell == "[]")
                     {
-                        string[] groups = regexFormula.Split(cell);
-                        int[] leftOperand = new int[2] { int.Parse(groups[2]), ColumnConverter.ConvertCellIndex(groups[1]) };
-                        int[] rightOperand = new int[2]{ int.Parse(groups[5]), ColumnConverter.ConvertCellIndex(groups[4]) };
-                        var cellItem = new Cell(rowIndex, columnIndex, groups[3], leftOperand, rightOperand);
+                        var cellItem = new ValueCell(rowIndex, columnIndex, 0);
                         row.Add(cellItem);
                     }
-                    else if(cell.Contains('+') || cell.Contains('-') || cell.Contains('*') || cell.Contains('/'))
+                    else if (cell.Contains('+') || cell.Contains('-') || cell.Contains('*') || cell.Contains('/'))
                     {
-                        var cellItem = new Cell(rowIndex, columnIndex, "#FORMULA");
-                        row.Add(cellItem);
-                    }
-                    else if (cell == "[]")
-                    { 
-                        var cellItem = new Cell(rowIndex, columnIndex);
-                        row.Add(cellItem);
-                    }
-                    else if(int.TryParse(cell, out int cellValue))
-                    {
-                        var cellItem = new Cell(rowIndex, columnIndex, cellValue);
-                        row.Add(cellItem);
-                    }
-
-                    else
-                    {
-                        if (cell[0] == '=')
+                        if (regexFormula.IsMatch(cell))
                         {
-                            var cellItem = new Cell(rowIndex, columnIndex, "#MISSOP");
+                            string[] groups = regexFormula.Split(cell);
+                            int[] leftOperand = new int[2] { int.Parse(groups[2]), ColumnConverter.ConvertCellIndex(groups[1]) };
+                            int[] rightOperand = new int[2] { int.Parse(groups[5]), ColumnConverter.ConvertCellIndex(groups[4]) };
+                            var cellItem = new FormulaCell(rowIndex, columnIndex, groups[3], leftOperand, rightOperand);
                             row.Add(cellItem);
                         }
                         else
                         {
-                            var cellItem = new Cell(rowIndex, columnIndex, "#INVVAL");
+                            var cellItem = new ErrorCell(rowIndex, columnIndex, missFormula);
+                            row.Add(cellItem);
+                        }
+                    }
+                    else if (int.TryParse(cell, out int cellValue))
+                    {
+                        var cellItem = new ValueCell(rowIndex, columnIndex, cellValue);
+                        row.Add(cellItem);
+                    }
+                    else
+                    {
+                        if (cell[0] == '=')
+                        {
+                            var cellItem = new ErrorCell(rowIndex, columnIndex, missOp);
+                            row.Add(cellItem);
+                        }
+                        else
+                        {
+                            var cellItem = new ErrorCell(rowIndex, columnIndex, missVal);
                             row.Add(cellItem);
                         }
                     }
 
                     columnIndex++;
                 }
-                ExcelTable.Table.Add(row);
+
+                ExcelTable.ProvisionalTableBasic.Add(row);
                 rowIndex++;
+                line = input.GetLine();
             }
+            ExcelTable.ProvisionalToUsable();
         }
+
+        /// <summary>
+        /// Resolves all formulas contained within the input table.
+        /// </summary>
         public void ResolveAllFormulas()
         {
-            foreach (var line in ExcelTable.Table)
+            int lineCount = ExcelTable.Table.Length;
+            for (int i = 0; i < lineCount; i++)
             {
-                foreach (var cell in line)
+                for (int j = 0; j < ExcelTable.Table[i].Count; j++)
                 {
-                    ResolveFormula(cell);
+                    if (ExcelTable.Table[i][j] is FormulaCell)
+                    {
+                        ResolveFormula((FormulaCell)ExcelTable.Table[i][j]);
+                    }
                 }
             }
         }
-        public void ResolveFormula(Cell cell)
+
+        /// <summary>
+        /// Resolves a certain formula using a stack. Detects errors/problems with the computation of a formula.
+        /// </summary>
+        /// <param name="cell"></param>
+        public void ResolveFormula(FormulaCell cell)
         {
-            Stack<Cell> stack = new Stack<Cell>();
+            //constants for all the different errors that we try to catch
+
+            const string missCycle = "#CYCLE";
+            const string missError = "#ERROR";
+            const string missDiv = "#DIV0";
+            FormulaCell currCell;
+            FormulaCell originalCell = cell;
+            //stack for operations embedded in an operator
+            Stack<FormulaCell> stack = new Stack<FormulaCell>();
             int leftOperandRow = 0;
             int leftOperandCol = 0;
             int rightOperandRow = 0;
             int rightOperandCol = 0;
-            int leftOperand = int.MaxValue;
-            int rightOperand = int.MaxValue;
-            if (cell.Operation != "" && cell.Error == "")
+            int? leftOperand = null;
+            int? rightOperand = null;
+
+            stack.Push(cell);
+            while (stack.Count > 0)
             {
-                Cell originalCell = cell;
-                stack.Push(cell);
-                while (stack.Count > 0)
+                currCell = stack.Pop();
+                
+                leftOperandRow = currCell.LeftOperandIndex[0];
+                leftOperandCol = currCell.LeftOperandIndex[1];
+                rightOperandRow = currCell.RightOperandIndex[0];
+                rightOperandCol = currCell.RightOperandIndex[1];
+
+
+                //left operand
+                Cell leftOperandCell = ExcelTable.GetCell(leftOperandRow, leftOperandCol);
+                if (leftOperandCell != null)
                 {
-                    Cell currFormula = stack.Pop();
-                    
-                    leftOperandRow = currFormula.LeftOperandIndex[0];
-                    leftOperandCol = currFormula.LeftOperandIndex[1];
-                    rightOperandRow = currFormula.RightOperandIndex[0];
-                    rightOperandCol = currFormula.RightOperandIndex[1];
-                    
-                    //left operand
-                    if (ExcelTable.GetCell(leftOperandRow, leftOperandCol).Operation != "" && ExcelTable.GetCell(leftOperandRow, leftOperandCol).Error == "")
+                    if (leftOperandCell is FormulaCell)
                     {
+
                         //cycle detection
-                        if (leftOperandRow == originalCell.Row &&  leftOperandCol == originalCell.Column)
+                        if (leftOperandCell == originalCell)
                         {
-                            ExcelTable.GetCell(leftOperandRow, leftOperandCol).Error = "#CYCLE";
-                            currFormula.Error = "#CYCLE";
+                            ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missCycle));
+                            foreach (var cycleCell in stack)
+                            {
+                                ExcelTable.SetCell(cycleCell.Row, cycleCell.Column, new ErrorCell(cycleCell.Row, cycleCell.Column, missCycle));
+                            }
+                            stack.Clear();
                             break;
                         }
-                        if (stack.Count == 0 || stack.Peek() != currFormula)
+                        if (leftOperand == null && (stack.Count == 0 || stack.Peek() != currCell))
                         {
-                            stack.Push(currFormula);
+                            stack.Push(currCell);
                         }
-                       
-                        stack.Push(ExcelTable.GetCell(leftOperandRow, leftOperandCol));
+                        stack.Push((FormulaCell)leftOperandCell);
+                        
                     }
-                    else if( ExcelTable.GetCell(leftOperandRow, leftOperandCol).Error != "")
+                    else if (leftOperandCell is ErrorCell)
                     {
-                        currFormula.Error = "#ERROR";
+                        ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missError));
                         stack.Clear();
                         break;
                     }
-                    else
+                    else if (leftOperandCell is ValueCell)
                     {
-                        leftOperand = ExcelTable.GetCell(leftOperandRow, leftOperandCol).Value;
-                    }
-                    //right operand
-                    if (ExcelTable.GetCell(rightOperandRow, rightOperandCol).Operation != "" && ExcelTable.GetCell(rightOperandRow, rightOperandCol).Error == "")
-                    {
-                        //cycle detection
-                        if (rightOperandRow== originalCell.Row &&  rightOperandCol == originalCell.Column)
-                        {
-                            ExcelTable.GetCell(rightOperandRow, rightOperandCol).Error = "#CYCLE";
-                            currFormula.Error = "#CYCLE";
-                            break;
-                        }
-
-                        if (stack.Count == 0 || stack.Peek() != currFormula)
-                        {
-                            stack.Push(currFormula);
-                        }
-                        stack.Push(ExcelTable.GetCell(rightOperandRow, rightOperandCol));
-                    }
-                    else if (ExcelTable.GetCell(rightOperandRow, rightOperandCol).Error != "")
-                    {
-                        currFormula.Error = "#ERROR";
-                        stack.Clear();
-                        break;
-                    }
-                    else
-                    {
-                        rightOperand = ExcelTable.GetCell(rightOperandRow,rightOperandCol).Value;
-                    }
-
-                    //if both values are retrieved
-                    if(leftOperand != int.MaxValue && rightOperand != int.MaxValue)
-                    {
-                        switch (currFormula.Operation)
-                        {
-                            case "+":
-                                currFormula.Value = leftOperand + rightOperand;
-                                break;
-                            case "-":
-                                currFormula.Value = leftOperand - rightOperand;
-                                break;
-                            case "*":
-                                currFormula.Value = leftOperand * rightOperand;
-                                break;
-                            case "/":
-                                if (rightOperand != 0)
-                                {
-                                    currFormula.Value = leftOperand / rightOperand;
-                                }
-                                else
-                                {
-                                    currFormula.Error = "#DIV0";
-                                }
-                                break;
-                        }
-                        currFormula.Operation = "";
+                        leftOperand = ((ValueCell)leftOperandCell).Value;
                     }
                 }
+                else
+                {
+                    leftOperand = 0;
+                }
+                //right operand
+                Cell rightOperandCell = ExcelTable.GetCell(rightOperandRow, rightOperandCol);
+                if (rightOperandCell != null)
+                {
+                    if (rightOperandCell is FormulaCell)
+                    {
+                        //cycle detection
+                        
+                            if (rightOperandCell == originalCell)
+                            {
+                                ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missCycle));
+                                foreach (var cycleCell in stack)
+                                {
+                                    ExcelTable.SetCell(cycleCell.Row, cycleCell.Column, new ErrorCell(cycleCell.Row, cycleCell.Column, missCycle));
+                                }
+                                stack.Clear();
+                                break;
+                            }
+                            if (rightOperand == int.MaxValue && (stack.Count == 0 || stack.Peek() != currCell))
+                            {
+                                stack.Push(currCell);
+                            }
+
+                            stack.Push((FormulaCell)rightOperandCell);
+                        
+                    }
+                    else if (rightOperandCell is ErrorCell)
+                    {
+                        ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missError));
+                        stack.Clear();
+                        break;
+                    }
+                    else if (rightOperandCell is ValueCell)
+                    {
+                        rightOperand = ((ValueCell)rightOperandCell).Value;
+                    }
+                }
+                else
+                {
+                    rightOperand = 0;
+                }
+
+                //if both values are retrieved
+                if (currCell is FormulaCell && leftOperand != null && rightOperand != null)
+                {
+                    int left = leftOperand.Value;
+                    int right = rightOperand.Value;
+                    switch (currCell.Operation)
+                    {
+                        case "+":
+                            ExcelTable.SetCell(currCell.Row, currCell.Column, new ValueCell(currCell.Row, currCell.Column, left + right));
+                            break;
+                        case "-":
+                            ExcelTable.SetCell(currCell.Row, currCell.Column, new ValueCell(currCell.Row, currCell.Column, left - right));
+                            break;
+                        case "*":
+                            ExcelTable.SetCell(currCell.Row, currCell.Column, new ValueCell(currCell.Row, currCell.Column, left * right));
+                            break;
+                        case "/":
+                            if (rightOperand != 0)
+                            {
+                                ExcelTable.SetCell(currCell.Row, currCell.Column, new ValueCell(currCell.Row, currCell.Column, left / right));
+                            }
+                            else
+                            {
+                                ExcelTable.SetCell(currCell.Row, currCell.Column, new ErrorCell(currCell.Row, currCell.Column, missDiv));
+                                stack.Clear();
+                            }
+                            break;
+                    }
+                    currCell.Operation = "";
+                }
+
             }
         }
-
 
     }
     static class ColumnConverter
     {
         /// <summary>
-        /// Convert cell index from letter to number representation
+        /// Convert cell index from letter to a number representation.
         /// </summary>
         /// <param name="columnString"></param>
         /// <returns></returns>
         public static int ConvertCellIndex(string columnString)
         {
             int columnNumber = 0;
-            int stringLength = columnString.Length-1;
+            int stringLength = columnString.Length - 1;
             int exponent = 1;
 
             for (int i = stringLength; i >= 0; i--)
@@ -353,8 +436,6 @@ namespace Excel
             }
             return columnNumber;
         }
-
-
-
     }
 }
+
