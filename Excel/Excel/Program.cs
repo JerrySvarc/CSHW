@@ -166,7 +166,7 @@ namespace Excel
         }
         public static Cell GetCell(int row, int column)
         {
-            if (row - 1 > Table.Length || column - 1 > Table[row - 1].Count)
+            if (row - 1 >= Table.Length || column - 1 > Table[row - 1].Count)
             {
                 return null;
             }
