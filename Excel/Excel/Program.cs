@@ -7,6 +7,7 @@ namespace Excel
 {
     class Program
     {
+        //this should increase REGEX performance
         static Regex regexFormula = new Regex(@"^=([A-Z]+)([0-9]+)([+\-*\/])([A-Z]+)([0-9]+)", RegexOptions.Compiled);
         static void Main(string[] args)
         {
@@ -24,9 +25,11 @@ namespace Excel
                     Input input = new Input(inputFileName);
                     Output output = new Output();
                     TableMaker tableMaker = new TableMaker();
-                    
-                    tableMaker.ProcessRows(input, regexFormula);
+                    // process the input file
+                    input.ProcessRows(input, regexFormula);
+                    //resolved all formulas from the input file
                     tableMaker.ResolveAllFormulas();
+                    //output the result table to the output file
                     using (var outputFile = File.Open(outputFileName, FileMode.OpenOrCreate))
                     {
                         using (StreamWriter writer = new StreamWriter(outputFile))
@@ -73,123 +76,6 @@ namespace Excel
         {
             return reader.ReadLine();
         }
-    }
-
-    //TODO: rewrite writing output 
-    class Output
-    {
-        public void WriteTable(StreamWriter writer)
-        {
-            foreach (var line in ExcelTable.Table)
-            {
-                foreach (var item in line)
-                {
-                    if (item is ErrorCell)
-                    {
-                        writer.Write(((ErrorCell)item).Error);
-                    }
-                    else if (item is ValueCell)
-                    {
-                        if (((ValueCell)item).IsEmpty == false)
-                        {
-                            writer.Write(((ValueCell)item).Value);
-                        }
-                        else
-                        {
-                            writer.Write("[]");
-                        }
-                    }
-                    writer.Write(' ');
-                }
-                writer.Write('\n');
-            }
-        }
-    }
-    public abstract class Cell
-    {
-        public int Column { get; set; }
-        public int Row { get; set; }
-        public Cell()
-        {
-
-        }
-
-    }
-    class ValueCell : Cell
-    {
-        public int Value { get; set; }
-        public bool IsEmpty { get; set; }
-
-
-        public ValueCell(int row, int column, int value, bool isEmpty)
-        {
-            Column = column;
-            Row = row;
-            Value = value;
-            IsEmpty = isEmpty;
-        }
-
-    }
-    class FormulaCell : Cell
-    {
-        public string Operation { get; set; }
-        public int[] LeftOperandIndex { get; set; }
-        public int[] RightOperandIndex { get; set; }
-
-        public FormulaCell(int row, int column, string operation, int[] leftOperandIndex, int[] rightOperandIndex)
-        {
-            Row = row;
-            Column = column;
-            Operation = operation;
-            LeftOperandIndex = leftOperandIndex;
-            RightOperandIndex = rightOperandIndex;
-        }
-
-    }
-    class ErrorCell : Cell
-    {
-        public string Error { get; set; }
-        public ErrorCell(int row, int column, string error)
-        {
-            Column = column;
-            Row = row;
-            Error = error;
-        }
-    }
-
-    /// <summary>
-    /// Table representation containing all cell values. Cell can be retrieved by providing row and column indices to the GetCell() method. 
-    /// </summary>
-    static class ExcelTable
-    {
-        public static List<List<Cell>> Table = new List<List<Cell>>();
-
-        public static Cell GetCell(int row, int column)
-        {
-            if (row - 1 >= Table.Count || column - 1 >= Table[row - 1].Count)
-            {
-                return null;
-            }
-            return Table[row - 1][column - 1];
-        }
-        public static void SetCell(int row, int column, Cell cell)
-        {
-            Table[row - 1][column - 1] = cell;
-        }
-    }
-
-    class TableMaker
-    {
-        const string missCycle = "#CYCLE";
-        const string missError = "#ERROR";
-        const string missDiv = "#DIV0";
-        FormulaCell currCell;
-        FormulaCell originalCell;
-        List<FormulaCell> cellPath = new List<FormulaCell>();
-        //stack for operations embedded in an operator
-        Stack<FormulaCell> stack = new Stack<FormulaCell>();
-        
-
         /// <summary>
         /// Function which processes data cells from the input file and adds them to a local representation of the Excel table.
         /// </summary>
@@ -210,12 +96,12 @@ namespace Excel
                 int columnIndex = 1;
                 foreach (string cell in cells)
                 {
-                    if (cell == "[]")
+                    if (cell == "[]") // empty cell
                     {
                         var cellItem = new ValueCell(rowIndex, columnIndex, 0, true);
                         row.Add(cellItem);
                     }
-                    else if (int.TryParse(cell, out int cellValue))
+                    else if (int.TryParse(cell, out int cellValue)) // cell with a numerical value
                     {
                         var cellItem = new ValueCell(rowIndex, columnIndex, cellValue, false);
                         row.Add(cellItem);
@@ -264,37 +150,142 @@ namespace Excel
                 line = input.GetLine();
             }
         }
-        public bool CheckOperands(string[] operands)
+    }
+
+    
+    class Output
+    {
+        /// <summary>
+        /// Displays all cells in the correct order using a StreamWriter 
+        /// </summary>
+        /// <param name="writer"></param>
+        public void WriteTable(StreamWriter writer)
         {
-            if (operands.Length != 2)
+            foreach (var line in ExcelTable.Table)
             {
-                return false;
-            }
-            else
-            {
-                foreach (var operand in operands)
+                foreach (var item in line)
                 {
-                    bool isRow = false;
-                    int operandLen = operand.Length;
-                    if (!char.IsDigit(operand[operandLen - 1]))
+                    if (item is ErrorCell)
                     {
-                        return false;
+                        writer.Write(((ErrorCell)item).Error);
                     }
-                    for (int i = 0; i < operandLen; i++)
+                    else if (item is ValueCell)
                     {
-                        if (char.IsLetter(operand[i]) && isRow)
+                        if (((ValueCell)item).IsEmpty == false)
                         {
-                            return false;
+                            writer.Write(((ValueCell)item).Value);
                         }
-                        if (char.IsDigit(operand[i]))
+                        else
                         {
-                            isRow = true;
+                            writer.Write("[]");
                         }
                     }
+                    writer.Write(' ');
                 }
-                return true;
+                writer.Write('\n');
             }
         }
+    }
+
+
+    public abstract class Cell
+    {
+        public int Column { get; set; }
+        public int Row { get; set; }
+        public Cell()
+        {
+
+        }
+
+    }
+    /// <summary>
+    /// Cell which contains only an integer.
+    /// </summary>
+    class ValueCell : Cell
+    {
+        public int Value { get; set; }
+        public bool IsEmpty { get; set; }
+
+
+        public ValueCell(int row, int column, int value, bool isEmpty)
+        {
+            Column = column;
+            Row = row;
+            Value = value;
+            IsEmpty = isEmpty;
+        }
+
+    }
+    /// <summary>
+    /// Formula cell with different operation. Operand indexes are stored as integer arrays.
+    /// </summary>
+    class FormulaCell : Cell
+    {
+        public string Operation { get; set; }
+        public int[] LeftOperandIndex { get; set; }
+        public int[] RightOperandIndex { get; set; }
+
+        public FormulaCell(int row, int column, string operation, int[] leftOperandIndex, int[] rightOperandIndex)
+        {
+            Row = row;
+            Column = column;
+            Operation = operation;
+            LeftOperandIndex = leftOperandIndex;
+            RightOperandIndex = rightOperandIndex;
+        }
+
+    }
+    /// <summary>
+    /// An error cell. 
+    /// </summary>
+    class ErrorCell : Cell
+    {
+        public string Error { get; set; }
+        public ErrorCell(int row, int column, string error)
+        {
+            Column = column;
+            Row = row;
+            Error = error;
+        }
+    }
+
+    /// <summary>
+    /// Table representation containing all cell values. Cell can be retrieved by providing row and column indices to the GetCell() method. Cells can be configured using the SetCell() method.
+    /// </summary>
+    static class ExcelTable
+    {
+        public static List<List<Cell>> Table = new List<List<Cell>>();
+
+        public static Cell GetCell(int row, int column)
+        {
+            if (row - 1 >= Table.Count || column - 1 >= Table[row - 1].Count)
+            {
+                return null;
+            }
+            return Table[row - 1][column - 1];
+        }
+        public static void SetCell(int row, int column, Cell cell)
+        {
+            Table[row - 1][column - 1] = cell;
+        }
+    }
+
+    /// <summary>
+    /// Class for resolving formulas present in the input table. 
+    /// </summary>
+    class TableMaker
+    {
+        const string missCycle = "#CYCLE";
+        const string missError = "#ERROR";
+        const string missDiv = "#DIV0";
+        FormulaCell currCell;
+        FormulaCell originalCell;
+        List<FormulaCell> cellPath = new List<FormulaCell>();
+
+        //stack for formulas embedded in a formula with higher copletion prioriy
+        Stack<FormulaCell> stack = new Stack<FormulaCell>();
+        
+
         /// <summary>
         /// Resolves all formulas contained within the input table.
         /// </summary>
@@ -473,7 +464,7 @@ namespace Excel
 
             for (int i = stringLength; i >= 0; i--)
             {
-                columnNumber = columnNumber + ((columnString[i] + 1 - 65) * exponent);
+                columnNumber = columnNumber + ((columnString[i] - 64 ) * exponent);
                 exponent = exponent * 26;
             }
             return columnNumber;
