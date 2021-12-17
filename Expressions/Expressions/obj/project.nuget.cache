@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "lGU9TCYeej6exEPXd37P4hAnAZBifm0j+HkJGi8WvsICw1QDWMRbvfl0oYmQ/ZEgkXJlrdAiT6VdZxbSY3hiJw==",
+  "success": true,
+  "projectFilePath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Expressions\\Expressions\\Expressions.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\skejt\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\5.0.12\\microsoft.netcore.app.host.win-x64.5.0.12.nupkg.sha512"
+  ],
+  "logs": []
+}
