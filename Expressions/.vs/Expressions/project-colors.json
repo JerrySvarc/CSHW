@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "7ed18c42-714a-4714-9a4f-5123ef3b324a": {
+      "ProjectGuid": "7ed18c42-714a-4714-9a4f-5123ef3b324a",
+      "DisplayName": "Expressions",
+      "ColorIndex": 0
+    },
+    "d39cac69-d2d2-409f-98e1-bde51c29b49b": {
+      "ProjectGuid": "d39cac69-d2d2-409f-98e1-bde51c29b49b",
+      "DisplayName": "ExpTests",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}
