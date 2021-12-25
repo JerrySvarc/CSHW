@@ -1,10 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Ob2RtM1oVKt65qsAZdjImpvxHkfNtFFEGqVgf6QmgXBrSzP8DanNWc6RKtk2my2OL88/j2kkFsAD6NtZLtqwhw==",
+  "dgSpecHash": "DRKMfP/lMd0pCJOtkRVz9iw+7gIarErz6OuL9fElXolIIIVTvWCsWKDyJjD1Zb0xO+8qXyqOG+1qQPbkp6YErA==",
   "success": true,
   "projectFilePath": "D:\\Matfyz\\Zimni semestr 21-22\\Ukoly\\Prog c#\\ProgrammingCSharpHW\\Excel\\Excel\\Excel.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\skejt\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\5.0.12\\microsoft.netcore.app.host.win-x64.5.0.12.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }
