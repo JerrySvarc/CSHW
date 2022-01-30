@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Expressions2
+namespace Expressions3
 {
     class Program
     {
@@ -19,7 +19,7 @@ namespace Expressions2
                     //Do nothing
                 }
                 //Epression
-                else if (  input[0] == '=' )
+                else if (input[0] == '=')
                 {
                     expr = null;
                     if (input.Length >= 3 && input[1] == ' ' && input[2] != ' ')
@@ -47,7 +47,7 @@ namespace Expressions2
                         {
                             try
                             {
-                                IntegerVisitor visitor  = new IntegerVisitor();
+                                IntegerVisitor visitor = new IntegerVisitor();
                                 iResult = expr.AcceptIntegerVisitor(visitor);
                                 Console.WriteLine(iResult);
                             }
@@ -245,7 +245,7 @@ namespace Expressions2
 
             return result;
         }
-        
+
         public abstract double AcceptRealVisitor(RealNumberVisitor visitor);
         public abstract int AcceptIntegerVisitor(IntegerVisitor visitor);
     }
@@ -310,7 +310,7 @@ namespace Expressions2
 
         public Expression OperandLeft { get => left; set { left = value; } }
         public Expression OperandRight { get => right; set { right = value; } }
-        
+
         public sealed override bool AddOperand(Expression operand)
         {
             if (left == null)
@@ -324,7 +324,7 @@ namespace Expressions2
             }
             return true;
         }
-       
+
 
     }
     sealed class UnaryMinusExpr : UnaryOpExpr
@@ -340,7 +340,7 @@ namespace Expressions2
         }
 
 
-      
+
     }
     sealed class PlusExpr : BinaryOpEpr
     {
@@ -353,7 +353,7 @@ namespace Expressions2
         {
             return visitor.Visit(this);
         }
-      
+
     }
     sealed class MinusExpr : BinaryOpEpr
     {
@@ -365,7 +365,7 @@ namespace Expressions2
         {
             return visitor.Visit(this);
         }
-       
+
     }
     sealed class DivideExpr : BinaryOpEpr
     {
@@ -377,7 +377,7 @@ namespace Expressions2
         {
             return visitor.Visit(this);
         }
-       
+
     }
     sealed class MultiplyExpr : BinaryOpEpr
     {
@@ -389,6 +389,6 @@ namespace Expressions2
         {
             return visitor.Visit(this);
         }
-        
+
     }
 }
