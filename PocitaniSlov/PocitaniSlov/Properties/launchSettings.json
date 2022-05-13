@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "PocitaniSlov": {
-      "commandName": "Project",
-      "commandLineArgs": "plain.txt "
-    }
-  }
-}
